@@ -331,6 +331,7 @@ class HardwareCollector:
                     winreg.HKEY_LOCAL_MACHINE,
                     r"SOFTWARE\Microsoft\Windows NT\CurrentVersion",
                 )
+                build_num = 0
                 try:
                     info["版本名称"] = winreg.QueryValueEx(key, "ProductName")[0]
                 except Exception:
@@ -340,10 +341,14 @@ class HardwareCollector:
                 except Exception:
                     pass
                 try:
-                    info["构建号"] = winreg.QueryValueEx(key, "CurrentBuild")[0]
+                    build_num = int(winreg.QueryValueEx(key, "CurrentBuild")[0])
+                    info["构建号"] = str(build_num)
                 except Exception:
                     pass
                 winreg.CloseKey(key)
+                # Windows 11 注册表 ProductName 仍写 "Windows 10"，需根据构建号修正
+                if build_num >= 22000 and "版本名称" in info:
+                    info["版本名称"] = info["版本名称"].replace("Windows 10", "Windows 11")
             except Exception:
                 pass
         except Exception:
